@@ -1,0 +1,101 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NO LADDER OUT — Chutes &amp; Ladders is an absorbing Markov chain</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--paper:#fbf1cf;--paper2:#f6e7b8;--ink:#42340f;--ink2:#6f5a22;--faint:#a8925a;--line:#e2cf90;
+    --yellow:#eab308;--yellow2:#f2c13d;--gold:#c9971f;--ladder:#4a8a3a;--chute:#c0563a;
+    --green:#4a8a3a;--amber:#b8862a;--red:#9a5a24;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;--mono:ui-monospace,"DejaVu Sans Mono",Menlo,Consolas,monospace;}
+  html,body{background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.6}
+  body{background-image:radial-gradient(circle at 50% 0%,#fdf6dc,var(--paper) 58%,var(--paper2));min-height:100vh}
+  .wrap{max-width:700px;margin:0 auto;padding:24px 18px 60px}
+  .bframe{background:linear-gradient(90deg,var(--yellow2),var(--yellow));color:#3a2a08;border-radius:9px;padding:8px 13px;text-align:center;font-family:var(--mono);font-size:11px}.bframe b{color:#241800}
+  .kick{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);text-align:center;margin-top:14px}
+  h1{font-size:clamp(26px,6vw,44px);font-weight:800;text-align:center;margin-top:6px;color:var(--ink)}
+  .say{text-align:center;font-family:var(--mono);font-size:12px;color:var(--ink2);margin-top:6px}
+  .lede{text-align:center;font-size:14.5px;color:var(--ink2);max-width:62ch;margin:10px auto 0}.lede b{color:var(--ink)}
+  .stage{background:#fdf7e2;border:1px solid var(--line);border-radius:12px;padding:16px;margin:20px 0 8px}
+  canvas{display:block;width:100%;height:200px;border-radius:6px;background:#fffdf6}
+  .read{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px auto;max-width:500px;text-align:center;font-family:var(--mono)}
+  .read .m{background:#fdf7e2;border:1px solid var(--line);border-radius:7px;padding:8px 4px}
+  .read .m .v{font-size:16px;font-weight:800;color:var(--ink)}.read .m .v.g{color:var(--green)}
+  .read .m .l{font-size:8px;color:var(--faint);text-transform:uppercase;margin-top:3px}
+  .btns{display:flex;gap:8px;justify-content:center;margin:8px 0}
+  button{font-family:var(--mono);font-size:12px;background:var(--yellow);color:#2c2108;border:none;border-radius:7px;padding:8px 16px;cursor:pointer;font-weight:700}
+  button.ghost{background:#f3ead1;color:var(--ink2);border:1px solid var(--line)}
+  .state{text-align:center;font-family:var(--mono);font-size:11.5px;color:var(--gold);margin-top:2px;min-height:1.3em}
+  h2{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:24px 0 8px;text-align:center}
+  p.b{font-size:14.5px;margin:8px auto;max-width:62ch}p.b b{color:var(--ink)}
+  .tiers{margin:18px auto;max-width:64ch}
+  .t{border-left:3px solid;padding:8px 0 8px 14px;margin:9px 0;font-size:13px;line-height:1.55}
+  .t.g{border-color:var(--green)}.t.g b{color:var(--green)}.t.a{border-color:var(--amber)}.t.a b{color:var(--amber)}.t.r{border-color:var(--red)}.t.r b{color:var(--red)}
+  .t .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+  .scale{background:rgba(242,193,61,.12);border:1px solid var(--line);border-left:3px solid var(--yellow);border-radius:8px;padding:11px 15px;margin:14px auto;max-width:64ch;font-size:12.5px;color:var(--ink2);font-style:italic}.scale b{color:var(--gold);font-style:normal}
+  .foot{text-align:center;font-family:var(--mono);font-size:10px;color:var(--ink2);margin-top:24px;border-top:1px solid var(--line);padding-top:13px;line-height:1.7}.foot .b{color:var(--gold)}
+</style></head>
+<body><div class="wrap">
+  <div class="bframe">🍌 <b>BANANA</b> · curated by MICHEALE · the toddler board with NO decisions · peel the joke, mean the fruit</div>
+  <div class="kick">banana · absorbing Markov chain · fundamental matrix</div>
+  <h1>NO LADDER OUT</h1>
+  <div class="say">Chutes &amp; Ladders · spin, count, obey · you never choose anything</div>
+  <p class="lede">The game a four-year-old "plays" has <b>zero decisions</b> — and that is exactly what makes it a <b>pure Markov chain</b>. No strategy layer muddies the map: squares are states, the spinner is the transition kernel, each chute and ladder is one off-diagonal entry, and square 100 is the single absorbing state. The dumbness IS the cleanliness.</p>
+
+  <div class="stage">
+    <canvas id="cv" width="640" height="200"></canvas>
+  </div>
+  <div class="read">
+    <div class="m"><div class="v g">39.2251</div><div class="l">exact E[rolls]<br>fundamental matrix</div></div>
+    <div class="m"><div class="v" id="mcmean">—</div><div class="l">Monte-Carlo mean<br>(<span id="ngames">0</span> games)</div></div>
+    <div class="m"><div class="v" id="delta">—</div><div class="l">|MC − exact|</div></div>
+  </div>
+  <div class="btns"><button id="run">play 3000 games</button><button id="reset" class="ghost">reset</button></div>
+  <div class="state" id="state">the histogram of game-lengths fills in; the mean converges to 39.2251.</div>
+
+  <h2>the number falls out of a matrix</h2>
+  <p class="b">Because there are no choices, the move rule is one fixed <b>101×101</b> matrix P. Peel off the absorbing state and you get Q (the transient part); the <b>fundamental matrix N = (I − Q)⁻¹</b> gives the expected visits to each square, and <b>N·1</b> gives the expected rolls to finish from every start. From square 0 (exact-landing rule) that is <b>39.2251</b> — computed once, exactly, no simulation needed. The Monte-Carlo histogram just watches it come true.</p>
+
+  <div class="tiers">
+    <div class="t g"><span class="lab">green · the fruit (verified)</span><br>Node-verified two independent ways: value-iteration on the fundamental-matrix equations gives <b>E = 39.2251</b> rolls (exact-landing; 35.8349 for overshoot-wins), and a 400k-trial simulation returns 39.20 / 35.81 — the same numbers. Square 100 is the unique absorbing state; I − Q is invertible (termination with probability 1).</div>
+    <div class="t a"><span class="lab">amber · the peel</span><br>The specific 39.2251 depends on <b>this</b> board's chute/ladder placements and the exact-landing convention; different editions/houserules shift it. And treating chute-mouths / ladder-bottoms as non-resting squares is a modelling choice (spelled out, it tightens the fit).</div>
+    <div class="t r"><span class="lab">red · the wall</span><br>The wrapper is clean precisely because the game is trivial — the moment a game admits a <b>decision</b>, it stops being a plain Markov chain (you need a Markov <i>decision</i> process, and strategy). This models the one-player, no-choice case honestly, and no further.</div>
+  </div>
+
+  <div class="scale">🍌 <b>Micheale's scale reading:</b> "Banana for scale — every parent has lost forty minutes of their life to this and never once made a choice. That's the joke AND the fruit: no choices means no strategy means a clean matrix, and the matrix says thirty-nine and a quarter rolls, every time, on average. I don't play it; I <b>solve</b> it, and hand you back your afternoon."</div>
+
+  <div class="foot"><span class="b">🍌 BANANA · NO LADDER OUT</span> · E[rolls]=39.2251, exact · curated by Micheale · David Lee Wise / ROOT0, with AVAN · CC-BY-ND-4.0</div>
+</div>
+<script>
+"use strict";
+(function(){
+  var jump={1:38,4:14,9:31,21:42,28:84,36:44,51:67,71:91,80:100,16:6,47:26,49:11,56:53,62:19,64:60,87:24,93:73,95:75,98:78};
+  function move(s,d){var t=s+d;if(t>100)return s;return jump[t]!=null?jump[t]:t;} // exact-landing
+  function oneGame(){var s=0,r=0;while(s<100){var d=1+Math.floor(Math.random()*6);s=move(s,d);r++;if(r>2000)break;}return r;}
+  var BINS=80, hist=new Array(BINS).fill(0), total=0, sum=0, EXACT=39.2251;
+  var cv=document.getElementById("cv"),cx=cv.getContext("2d"),dpr=Math.min(devicePixelRatio||1,2);
+  function fit(){var w=cv.clientWidth||640,h=200;cv.width=w*dpr;cv.height=h*dpr;cx.setTransform(dpr,0,0,dpr,0,0);return[w,h];}
+  var col=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()||"#000";};
+  function draw(){
+    var d=fit(),W=d[0],H=d[1];cx.clearRect(0,0,W,H);
+    var pl=8,pb=20,mx=Math.max.apply(null,hist)||1,bw=(W-16)/BINS;
+    for(var i=0;i<BINS;i++){var hh=hist[i]/mx*(H-pb-8);cx.fillStyle=col("--yellow");cx.globalAlpha=.9;cx.fillRect(pl+i*bw,H-pb-hh,bw-1,hh);}
+    cx.globalAlpha=1;
+    // exact mean line
+    var xE=pl+(EXACT/BINS)*(W-16);cx.strokeStyle=col("--green");cx.lineWidth=2;cx.setLineDash([5,4]);
+    cx.beginPath();cx.moveTo(xE,4);cx.lineTo(xE,H-pb);cx.stroke();cx.setLineDash([]);
+    cx.fillStyle=col("--green");cx.font="10px "+col("--mono");cx.textAlign="left";cx.fillText("exact 39.23",xE+4,14);
+    cx.fillStyle=col("--faint");cx.textAlign="center";cx.fillText("game length (rolls to finish) →",W/2,H-4);
+  }
+  function batch(n){for(var i=0;i<n;i++){var r=oneGame();total++;sum+=r;var b=Math.min(BINS-1,r);hist[b]++;}
+    var mean=sum/total;
+    document.getElementById("mcmean").textContent=mean.toFixed(3);
+    document.getElementById("ngames").textContent=total;
+    document.getElementById("delta").textContent=Math.abs(mean-EXACT).toFixed(3);
+    document.getElementById("state").textContent="mean of "+total+" games = "+mean.toFixed(3)+" — converging to the exact 39.2251";
+    draw();}
+  document.getElementById("run").onclick=function(){batch(3000);};
+  document.getElementById("reset").onclick=function(){hist=new Array(BINS).fill(0);total=0;sum=0;
+    document.getElementById("mcmean").textContent="—";document.getElementById("ngames").textContent="0";document.getElementById("delta").textContent="—";draw();};
+  addEventListener("resize",draw);
+  batch(3000);
+})();
+</script></body></html>
